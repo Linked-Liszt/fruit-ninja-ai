@@ -16,6 +16,11 @@ from stable_baselines import logger
 
 class FNSAC(OffPolicyRLModel):
     """
+    FN Modifications:
+        Remove train frequency. Update only at completion of episode. 
+
+
+
     Soft Actor-Critic (SAC)
     Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor,
     This implementation borrows code from original implementation (https://github.com/haarnoja/sac)
@@ -36,7 +41,6 @@ class FNSAC(OffPolicyRLModel):
     :param ent_coef: (str or float) Entropy regularization coefficient. (Equivalent to
         inverse of reward scale in the original SAC paper.)  Controlling exploration/exploitation trade-off.
         Set it to 'auto' to learn it automatically (and 'auto_0.1' for using 0.1 as initial value)
-    :param train_freq: (int) Update the model every `train_freq` steps.
     :param learning_starts: (int) how many steps of the model to collect transitions for before learning starts
     :param target_update_interval: (int) update the target network every `target_network_update_freq` steps.
     :param gradient_steps: (int) How many gradient update after each step
@@ -60,21 +64,20 @@ class FNSAC(OffPolicyRLModel):
     """
 
     def __init__(self, policy, env, gamma=0.99, learning_rate=3e-4, buffer_size=50000,
-                 learning_starts=100, train_freq=1, batch_size=64,
+                 learning_starts=100, batch_size=64,
                  tau=0.005, ent_coef='auto', target_update_interval=1,
                  gradient_steps=1, target_entropy='auto', action_noise=None,
                  random_exploration=0.0, verbose=0, tensorboard_log=None,
                  _init_setup_model=True, policy_kwargs=None, full_tensorboard_log=False,
                  seed=None, n_cpu_tf_sess=None):
 
-        super(SAC, self).__init__(policy=policy, env=env, replay_buffer=None, verbose=verbose,
+        super(FNSAC, self).__init__(policy=policy, env=env, replay_buffer=None, verbose=verbose,
                                   policy_base=SACPolicy, requires_vec_env=False, policy_kwargs=policy_kwargs,
                                   seed=seed, n_cpu_tf_sess=n_cpu_tf_sess)
 
         self.buffer_size = buffer_size
         self.learning_rate = learning_rate
         self.learning_starts = learning_starts
-        self.train_freq = train_freq
         self.batch_size = batch_size
         self.tau = tau
         # In the original paper, same learning rate is used for all networks
@@ -445,7 +448,7 @@ class FNSAC(OffPolicyRLModel):
                     tf_util.total_episode_reward_logger(self.episode_reward, ep_reward,
                                                         ep_done, writer, self.num_timesteps)
 
-                if step % self.train_freq == 0:
+                if done:
                     callback.on_rollout_end()
 
                     mb_infos_vals = []
@@ -546,7 +549,6 @@ class FNSAC(OffPolicyRLModel):
             "learning_rate": self.learning_rate,
             "buffer_size": self.buffer_size,
             "learning_starts": self.learning_starts,
-            "train_freq": self.train_freq,
             "batch_size": self.batch_size,
             "tau": self.tau,
             "ent_coef": self.ent_coef if isinstance(self.ent_coef, float) else 'auto',
