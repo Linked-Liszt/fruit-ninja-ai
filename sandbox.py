@@ -1,4 +1,14 @@
-import src.fn_ui as fn_ui
+import fnai.fn_gym as fn_gym
+import time
+import numpy as np
+from PIL import Image
 
-test_ui = fn_ui.FNUI()
-test_ui.start_game()
+test_gym = fn_gym.FNGym()
+test_gym._start_game()
+time.sleep(0.5)
+test_sc = test_gym._get_screenshot()
+test_sc = test_sc[:33, 30:150, :]
+im = Image.fromarray(test_sc)
+im.save('test.png')
+test_gym._get_score(test_sc)
+print(np.shape(test_sc))
