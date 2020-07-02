@@ -4,3 +4,5 @@
  * Image pipeline must be able to process  real-time. 
    * Unknown if stability matters. 
    * Possible to defer reward extraction to policy update time. 
+    * Just reward survival 
+   * Could use external OCR, but too slow. 
