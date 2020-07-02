@@ -38,28 +38,54 @@ class FNGym(gym.Env):
     self._calculate_obs_size(obs_scale)
     self.observation_space = gym.spaces.Box(low=0, high=255, shape=
       (self.obs_size[0], self.obs_size[1], self.obs_size[2]), dtype=np.uint8)
+    self.action_space = gym.spaces.Box(low=[0.0, 0.0, 0.0], high=[1.0, 1.0, 1.0], dtype=np.float32)
 
   def reset(self):
+    time.sleep(3.0)
+    self.done_counter = 0
     self._start_game()
     time.sleep(0.5)
 
 
   def step(self, action):
-    observation = self._get_observation() 
-    reward = None
-    done = None
+    raw_screenshot = self.d3d_buff.screenshot(region=self.win_coords)
+    observation = self._get_observation(raw_screenshot) 
+    done = self._is_done(raw_screenshot)
     info = None
+
+    reward = 1.0
+
+    self._make_swipe(action)
 
     return observation, reward, done, info
   
+  def _make_swipe(self, action):
+    if action[2] > 0.5:
+      pix_x = self.win_coords[0] + round((self.win_coords[2] - self.win_coords[0]) * action[0])
+      pix_x = min(pix_x, self.win_coords[2] - 80)
+      pix_y = self.win_coords[1] + round((self.win_coords[3] - self.win_coords[1]) * action[1])
+      pyautogui.moveTo(pix_x, pix_y)
+      pyautogui.drag(75, 0, duration=0.17, button='left')
+  
 
-  def _get_observation(self):
-    raw_screenshot = self.d3d_buff.screenshot(region=self.win_coords)
+  def _get_observation(self, raw_screenshot):
     scaled_screenshot = cv2.resize(raw_screenshot, (self.obs_size[0], self.obs_size[1]), interpolation=cv2.INTER_CUBIC)
     if self.is_obs_color:
       return scaled_screenshot
     else:
       return cv2.cvtColor(scaled_screenshot, cv2.COLOR_BGR2GRAY)
+    
+  def _is_done(self, raw_screenshot):
+    """
+    Analyze a a pixel insdie of the 3 x's to see if it turns red. 
+    Since fruits can overlay the UI, wait a 3 consecutive interactions. 
+    """
+    if raw_screenshot[27,-12,0] > 160:
+      if self.done_counter > 2:
+        return True
+      else:
+        self.done_counter += 1
+    return False
 
   def _calculate_obs_size(self, obs_scale):
     x_size = round((self.win_coords[2] - self.win_coords[0]) * obs_scale)
