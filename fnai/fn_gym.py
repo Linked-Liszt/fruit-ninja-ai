@@ -37,8 +37,9 @@ class FNGym(gym.Env):
     self.is_obs_color = is_obs_color
     self._calculate_obs_size(obs_scale)
     self.observation_space = gym.spaces.Box(low=0, high=255, shape=
-      (self.obs_size[0], self.obs_size[1], self.obs_size[2]), dtype=np.uint8)
-    self.action_space = gym.spaces.Box(low=[0.0, 0.0, 0.0], high=[1.0, 1.0, 1.0], dtype=np.float32)
+      (self.obs_size[1], self.obs_size[0], self.obs_size[2]), dtype=np.uint8)
+    self.action_space = gym.spaces.Box(low=np.array([0.0, 0.0, 0.0]), 
+      high=np.array([1.0, 1.0, 1.0]), dtype=np.float32)
 
   def reset(self):
     time.sleep(3.0)
@@ -50,8 +51,11 @@ class FNGym(gym.Env):
   def step(self, action):
     raw_screenshot = self.d3d_buff.screenshot(region=self.win_coords)
     observation = self._get_observation(raw_screenshot) 
+    print(np.shape(observation))
+    print(np.shape(observation[None]))
+    print(self.observation_space)
     done = self._is_done(raw_screenshot)
-    info = None
+    info = {}
 
     reward = 1.0
 
@@ -66,6 +70,8 @@ class FNGym(gym.Env):
       pix_y = self.win_coords[1] + round((self.win_coords[3] - self.win_coords[1]) * action[1])
       pyautogui.moveTo(pix_x, pix_y)
       pyautogui.drag(75, 0, duration=0.17, button='left')
+    else:
+      time.sleep(0.17)
   
 
   def _get_observation(self, raw_screenshot):
