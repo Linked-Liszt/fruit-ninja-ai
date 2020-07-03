@@ -46,14 +46,13 @@ class FNGym(gym.Env):
     self.done_counter = 0
     self._start_game()
     time.sleep(0.5)
+    raw_screenshot = self.d3d_buff.screenshot(region=self.win_coords)
+    return self._get_observation(raw_screenshot)
 
 
   def step(self, action):
     raw_screenshot = self.d3d_buff.screenshot(region=self.win_coords)
     observation = self._get_observation(raw_screenshot) 
-    print(np.shape(observation))
-    print(np.shape(observation[None]))
-    print(self.observation_space)
     done = self._is_done(raw_screenshot)
     info = {}
 
@@ -87,10 +86,12 @@ class FNGym(gym.Env):
     Since fruits can overlay the UI, wait a 3 consecutive interactions. 
     """
     if raw_screenshot[27,-12,0] > 160:
-      if self.done_counter > 2:
+      if self.done_counter > 1:
         return True
       else:
         self.done_counter += 1
+    else:
+      self.done_counter = 0
     return False
 
   def _calculate_obs_size(self, obs_scale):
