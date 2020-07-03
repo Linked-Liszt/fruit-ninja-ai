@@ -16,7 +16,7 @@ class FNGym(gym.Env):
       false to convert into single chanel
   '''
 
-  def __init__(self, obs_scale, is_obs_color=True, reward_score=False):
+  def __init__(self, obs_scale, is_obs_color=True, reward_score=True):
     super().__init__()
     self.reward_score = reward_score
 
@@ -67,6 +67,7 @@ class FNGym(gym.Env):
     else:
       reward = 1.0
 
+    print(reward)
     self._make_swipe(action)
 
     return observation, reward, done, info
@@ -74,8 +75,16 @@ class FNGym(gym.Env):
   def _make_swipe(self, action):
     if action[2] > 0.5:
       pix_x = self.win_coords[0] + round((self.win_coords[2] - self.win_coords[0]) * action[0])
+      # Restrict from moving off screen
       pix_x = min(pix_x, self.win_coords[2] - 80)
+      
       pix_y = self.win_coords[1] + round((self.win_coords[3] - self.win_coords[1]) * action[1])
+
+      # Restrict from hitting score area
+      if pix_x < self.win_coords[0] + 160 and pix_y < self.win_coords[1] + 40:
+        pix_x = self.win_coords[0] + 160
+        pix_y = self.win_coords[1] + 40
+
       pyautogui.moveTo(pix_x, pix_y)
       pyautogui.drag(75, 0, duration=0.17, button='left')
     else:

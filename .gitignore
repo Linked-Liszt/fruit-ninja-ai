@@ -2,3 +2,4 @@ fn_env
 .vscode
 __pycache__
 sac_fn_tensorboard
+saved_models

@@ -3,12 +3,10 @@ import time
 import numpy as np
 from PIL import Image
 
-test_gym = fn_gym.FNGym(0.2, False, True)
+test_gym = fn_gym.FNGym(0.2)
 init_img = test_gym.reset()
-for i in range(500):
-    time.sleep(0.5)
-    sc = test_gym.d3d_buff.screenshot(region=test_gym.win_coords)
-    test_gym._has_score_changed(sc)
+for i in range(10):
+    test_gym.step([0.0, 0.3, 1.0])
 
 """
 print(np.shape(init_img))
