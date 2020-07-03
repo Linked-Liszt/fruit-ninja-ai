@@ -16,8 +16,9 @@ class FNGym(gym.Env):
       false to convert into single chanel
   '''
 
-  def __init__(self, obs_scale, is_obs_color):
+  def __init__(self, obs_scale, is_obs_color=True, reward_score=False):
     super().__init__()
+    self.reward_score = reward_score
 
     fn_hwnd = win32gui.FindWindow(None, 'Fruit Ninja')
     if fn_hwnd == 0:
@@ -47,6 +48,8 @@ class FNGym(gym.Env):
     self._start_game()
     time.sleep(0.5)
     raw_screenshot = self.d3d_buff.screenshot(region=self.win_coords)
+    if self.reward_score:
+      self.last_score = raw_screenshot[:33, 30:150, :]
     return self._get_observation(raw_screenshot)
 
 
@@ -56,7 +59,13 @@ class FNGym(gym.Env):
     done = self._is_done(raw_screenshot)
     info = {}
 
-    reward = 1.0
+    if self.reward_score:
+      if self._has_score_changed(raw_screenshot):
+        reward = 1.0
+      else:
+        reward = 0.0
+    else:
+      reward = 1.0
 
     self._make_swipe(action)
 
@@ -72,6 +81,13 @@ class FNGym(gym.Env):
     else:
       time.sleep(0.17)
   
+
+  def _has_score_changed(self, raw_screenshot):
+    current_score = raw_screenshot[:33, 30:150, :]
+    diff = np.sum(cv2.subtract(self.last_score, current_score))
+    self.last_score = current_score
+    return diff > 10000
+
 
   def _get_observation(self, raw_screenshot):
     scaled_screenshot = cv2.resize(raw_screenshot, (self.obs_size[0], self.obs_size[1]), interpolation=cv2.INTER_CUBIC)
