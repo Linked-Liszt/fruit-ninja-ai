@@ -39,7 +39,7 @@ class FNGym(gym.Env):
     self._calculate_obs_size(obs_scale)
     self.observation_space = gym.spaces.Box(low=0, high=255, shape=
       (self.obs_size[1], self.obs_size[0], self.obs_size[2]), dtype=np.uint8)
-    self.action_space = gym.spaces.Box(low=np.array([0.0, 0.0]), 
+    self.action_space = gym.spaces.Box(low=np.array([-1.0, -1.0]), 
       high=np.array([1.0, 1.0]), dtype=np.float32)
     
     self.passoff_time = time.time()
@@ -79,6 +79,7 @@ class FNGym(gym.Env):
     return observation, reward, done, info
   
   def _make_swipe(self, action):
+    action = (action * 0.5) + 0.5
     pix_x = self.win_coords[0] + round((self.win_coords[2] - self.win_coords[0]) * action[0])
     
     pix_y = self.win_coords[1] + round((self.win_coords[3] - self.win_coords[1]) * action[1])
@@ -114,7 +115,7 @@ class FNGym(gym.Env):
     Analyze a a pixel insdie of the 3 x's to see if it turns red. 
     Since fruits can overlay the UI, wait a 3 consecutive interactions. 
     """
-    return raw_screenshot[27,-12,0] > 160 or raw_screenshot[25, 10, 0] < 80
+    return bool(raw_screenshot[27,-12,0] > 160 or raw_screenshot[25, 10, 0] < 80)
     """
     if raw_screenshot[27,-12,0] > 160:
       if self.done_counter > 1:
