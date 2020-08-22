@@ -1,7 +1,7 @@
 import argparse
 import fnai.fn_sac as fn_sac
 import fnai.fn_gym as fn_gym
-from stable_baselines import SAC 
+from stable_baselines import SAC
 from os import path
 
 parser = argparse.ArgumentParser(description='Train the model')
@@ -27,16 +27,17 @@ else:
 
 keep_training=True
 log_num = 0
-train_interval = 2000
+train_interval = 50000
+manual_log_num = 0
 while keep_training:
     try:
         model.learn(total_timesteps=train_interval)
-        model.save(f'saved_models/model_auto_{log_num}')
-    except KeyboardInterrupt:
+        model.save(f'saved_models/model_auto_sac_{log_num}')
+        log_num += 1
+    except (KeyboardInterrupt, ValueError):
         print('Saving model...')
-        model.save(f'saved_models/model_manuel_{log_num}')
+        model.save(f'saved_models/model_manuel_sac_{manual_log_num}')
+        manual_log_num += 1
         response = input("Keep Training (N/n to stop):")
         if response.lower() == 'n':
             keep_training = False
-    log_num += 1
-

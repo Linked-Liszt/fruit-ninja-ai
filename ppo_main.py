@@ -28,16 +28,18 @@ else:
 
 keep_training=True
 log_num = 0
-train_interval = 2000
+manual_log_num = 0
+train_interval = 100000
 while keep_training:
     try:
         model.learn(total_timesteps=train_interval)
-        model.save(f'saved_models/model_auto_{log_num}')
+        model.save(f'saved_models/model_auto_sac_{log_num}')
+        log_num += 1
     except KeyboardInterrupt:
         print('Saving model...')
-        model.save(f'saved_models/model_manuel_{log_num}')
+        model.save(f'saved_models/model_manuel_ppo_{manual_log_num}')
+        manual_log_num += 1
         response = input("Keep Training (N/n to stop):")
         if response.lower() == 'n':
             keep_training = False
-    log_num += 1
 
